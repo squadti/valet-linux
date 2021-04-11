@@ -8,12 +8,13 @@ class LaravelValetDriver extends ValetDriver
      * @param string $sitePath
      * @param string $siteName
      * @param string $uri
+     *
      * @return bool
      */
     public function serves($sitePath, $siteName, $uri)
     {
-        return file_exists($sitePath . '/public/index.php') &&
-            file_exists($sitePath . '/artisan');
+        return file_exists($sitePath.'/public/index.php') &&
+               file_exists($sitePath.'/artisan');
     }
 
     /**
@@ -22,12 +23,13 @@ class LaravelValetDriver extends ValetDriver
      * @param string $sitePath
      * @param string $siteName
      * @param string $uri
+     *
      * @return string|false
      */
     public function isStaticFile($sitePath, $siteName, $uri)
     {
-        if (file_exists($staticFilePath = $sitePath . '/public' . $uri)
-            && is_file($staticFilePath)) {
+        if (file_exists($staticFilePath = $sitePath.'/public'.$uri)
+           && is_file($staticFilePath)) {
             return $staticFilePath;
         }
 
@@ -37,7 +39,7 @@ class LaravelValetDriver extends ValetDriver
             $storageUri = substr($uri, 8);
         }
 
-        if ($this->isActualFile($storagePath = $sitePath . '/storage/app/public' . $storageUri)) {
+        if ($this->isActualFile($storagePath = $sitePath.'/storage/app/public'.$storageUri)) {
             return $storagePath;
         }
 
@@ -50,6 +52,7 @@ class LaravelValetDriver extends ValetDriver
      * @param string $sitePath
      * @param string $siteName
      * @param string $uri
+     *
      * @return string
      */
     public function frontControllerPath($sitePath, $siteName, $uri)
@@ -59,6 +62,6 @@ class LaravelValetDriver extends ValetDriver
             $_SERVER['HTTP_HOST'] = $_SERVER['HTTP_X_FORWARDED_HOST'];
         }
 
-        return $sitePath . '/public/index.php';
+        return $sitePath.'/public/index.php';
     }
 }

@@ -20,7 +20,12 @@ function fix-config() {
 
 if [[ "$1" = "update" ]]
 then
-    composer global update "squadti/valet-linux"
+    if [[ "$2" ]]
+    then
+        composer global update "squadti/valet-linux:$2"
+    else
+        composer global update "squadti/valet-linux"
+    fi
     valet install
 fi
 

@@ -8,11 +8,12 @@ class NeosValetDriver extends ValetDriver
      * @param string $sitePath
      * @param string $siteName
      * @param string $uri
+     *
      * @return bool
      */
     public function serves($sitePath, $siteName, $uri)
     {
-        return file_exists($sitePath . '/flow') && is_dir($sitePath . '/Web');
+        return file_exists($sitePath.'/flow') && is_dir($sitePath.'/Web');
     }
 
     /**
@@ -21,11 +22,12 @@ class NeosValetDriver extends ValetDriver
      * @param string $sitePath
      * @param string $siteName
      * @param string $uri
+     *
      * @return string|false
      */
     public function isStaticFile($sitePath, $siteName, $uri)
     {
-        if ($this->isActualFile($staticFilePath = $sitePath . '/Web' . $uri)) {
+        if ($this->isActualFile($staticFilePath = $sitePath.'/Web'.$uri)) {
             return $staticFilePath;
         }
 
@@ -38,15 +40,16 @@ class NeosValetDriver extends ValetDriver
      * @param string $sitePath
      * @param string $siteName
      * @param string $uri
+     *
      * @return string
      */
     public function frontControllerPath($sitePath, $siteName, $uri)
     {
         putenv('FLOW_CONTEXT=Development');
         putenv('FLOW_REWRITEURLS=1');
-        $_SERVER['SCRIPT_FILENAME'] = $sitePath . '/Web/index.php';
+        $_SERVER['SCRIPT_FILENAME'] = $sitePath.'/Web/index.php';
         $_SERVER['SCRIPT_NAME'] = '/index.php';
 
-        return $sitePath . '/Web/index.php';
+        return $sitePath.'/Web/index.php';
     }
 }

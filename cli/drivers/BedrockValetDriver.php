@@ -8,14 +8,15 @@ class BedrockValetDriver extends BasicValetDriver
      * @param string $sitePath
      * @param string $siteName
      * @param string $uri
+     *
      * @return bool
      */
     public function serves($sitePath, $siteName, $uri)
     {
-        return file_exists($sitePath . '/web/app/mu-plugins/bedrock-autoloader.php') ||
-            (is_dir($sitePath . '/web/app/') &&
-                file_exists($sitePath . '/web/wp-config.php') &&
-                file_exists($sitePath . '/config/application.php'));
+        return file_exists($sitePath.'/web/app/mu-plugins/bedrock-autoloader.php') ||
+              (is_dir($sitePath.'/web/app/') &&
+               file_exists($sitePath.'/web/wp-config.php') &&
+               file_exists($sitePath.'/config/application.php'));
     }
 
     /**
@@ -24,11 +25,12 @@ class BedrockValetDriver extends BasicValetDriver
      * @param string $sitePath
      * @param string $siteName
      * @param string $uri
+     *
      * @return string|false
      */
     public function isStaticFile($sitePath, $siteName, $uri)
     {
-        $staticFilePath = $sitePath . '/web' . $uri;
+        $staticFilePath = $sitePath.'/web'.$uri;
 
         if ($this->isActualFile($staticFilePath)) {
             return $staticFilePath;
@@ -43,6 +45,7 @@ class BedrockValetDriver extends BasicValetDriver
      * @param string $sitePath
      * @param string $siteName
      * @param string $uri
+     *
      * @return string
      */
     public function frontControllerPath($sitePath, $siteName, $uri)
@@ -51,24 +54,25 @@ class BedrockValetDriver extends BasicValetDriver
         $_SERVER['SERVER_NAME'] = $_SERVER['HTTP_HOST'];
 
         if (strpos($uri, '/wp/') === 0) {
-            return is_dir($sitePath . '/web' . $uri)
-                ? $sitePath . '/web' . $this->forceTrailingSlash($uri) . '/index.php'
-                : $sitePath . '/web' . $uri;
+            return is_dir($sitePath.'/web'.$uri)
+                            ? $sitePath.'/web'.$this->forceTrailingSlash($uri).'/index.php'
+                            : $sitePath.'/web'.$uri;
         }
 
-        return $sitePath . '/web/index.php';
+        return $sitePath.'/web/index.php';
     }
 
     /**
      * Redirect to uri with trailing slash.
      *
      * @param string $uri
+     *
      * @return string
      */
     private function forceTrailingSlash($uri)
     {
         if (substr($uri, -1 * strlen('/wp/wp-admin')) == '/wp/wp-admin') {
-            header('Location: ' . $uri . '/');
+            header('Location: '.$uri.'/');
             die;
         }
 

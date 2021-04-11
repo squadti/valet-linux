@@ -1,5 +1,5 @@
 {
-    "name": "squadti/valet-linux",
+    "name": "genesisweb/valet-linux-plus",
     "description": "Advanced local development experience for Linux.",
     "keywords": [
         "laravel",
@@ -36,10 +36,6 @@
         {
             "name": "Gensis Web",
             "email": "info@genesisweb.co.in"
-        },
-        {
-            "name": "SquadTI",
-            "email": "info@squadti.com"
         }
     ],
     "autoload": {
@@ -61,11 +57,11 @@
         "ext-posix": "*",
         "ext-json": "*",
         "php": ">=7.1",
-        "illuminate/container": "~5.3|^6.0|^7.0|^8.0",
+        "illuminate/container": "~5.3",
         "mnapoli/silly": "~1.1",
-        "symfony/process": "~2.7|~3.0|~4.0|~5.0",
+        "symfony/process": "~2.7|~3.0|~4.0",
         "nategood/httpful": "~0.2",
-        "tightenco/collect": "~5.3|^6.0|^7.0|^8.0",
+        "tightenco/collect": "~8.19",
         "symfony/console": "~5.2"
     },
     "require-dev": {

@@ -8,6 +8,7 @@ interface PackageManager
      * Determine if the given package is installed.
      *
      * @param string $package
+     *
      * @return bool
      */
     public function installed($package);
@@ -16,6 +17,7 @@ interface PackageManager
      * Ensure that the given package is installed.
      *
      * @param string $package
+     *
      * @return void
      */
     public function ensureInstalled($package);
@@ -24,6 +26,7 @@ interface PackageManager
      * Install the given package and throw an exception on failure.
      *
      * @param string $package
+     *
      * @return void
      */
     public function installOrFail($package);

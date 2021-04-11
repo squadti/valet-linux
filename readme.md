@@ -2,7 +2,7 @@
 
 Valet Linux is a fork of Valet Linux. GitHub [repository](https://github.com/genesisweb/valet-linux-plus)
 
-Oficial Page: [Valet Linux+ website](https://valetlinuxplus/)
+Oficial Page: [Valet Linux+ website](https://valetlinux.plus/)
 
 ## Introduction
 
