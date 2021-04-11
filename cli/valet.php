@@ -10,8 +10,9 @@ if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
     require __DIR__ . '/../../../autoload.php';
 }
 
-use Illuminate\Container\Container;
 use Silly\Application;
+use Illuminate\Container\Container;
+use Symfony\Component\Console\Question\ConfirmationQuestion;
 
 /**
  * Create the application.
@@ -40,6 +41,9 @@ $app->command('install [--ignore-selinux]', function ($ignoreSELinux) {
     DnsMasq::install(Configuration::read()['domain']);
     Nginx::restart();
     Valet::symlinkToUsersBin();
+    Mailhog::install();
+    ValetRedis::install();
+    Mysql::install();
 
     output(PHP_EOL . '<info>Valet installed successfully!</info>');
 })->descriptions('Install the Valet services', [
@@ -70,6 +74,7 @@ if (is_dir(VALET_HOME_PATH)) {
 
         Configuration::updateKey('domain', $domain);
         Site::resecureForNewDomain($oldDomain, $domain);
+        Mailhog::updateDomain();
         PhpFpm::restart();
         Nginx::restart();
 
@@ -256,6 +261,9 @@ if (is_dir(VALET_HOME_PATH)) {
     $app->command('start', function () {
         PhpFpm::restart();
         Nginx::restart();
+        Mailhog::restart();
+        Mysql::restart();
+        ValetRedis::restart();
 
         info('Valet services have been started.');
     })->descriptions('Start the Valet services');
@@ -266,6 +274,9 @@ if (is_dir(VALET_HOME_PATH)) {
     $app->command('restart', function () {
         PhpFpm::restart();
         Nginx::restart();
+        Mailhog::restart();
+        Mysql::restart();
+        ValetRedis::restart();
 
         info('Valet services have been restarted.');
     })->descriptions('Restart the Valet services');
@@ -276,6 +287,9 @@ if (is_dir(VALET_HOME_PATH)) {
     $app->command('stop', function () {
         PhpFpm::stop();
         Nginx::stop();
+        Mailhog::stop();
+        Mysql::stop();
+        ValetRedis::stop();
 
         info('Valet services have been stopped.');
     })->descriptions('Stop the Valet services');
@@ -287,6 +301,7 @@ if (is_dir(VALET_HOME_PATH)) {
         Nginx::uninstall();
         PhpFpm::uninstall();
         DnsMasq::uninstall();
+        Mailhog::uninstall();
         Configuration::uninstall();
         Valet::uninstall();
 
@@ -318,6 +333,120 @@ if (is_dir(VALET_HOME_PATH)) {
         PhpFpm::changeVersion($preferedversion);
         info('php-fpm version successfully changed! 🎉');
     })->descriptions('Set the PHP-fpm version to use, enter "default" or leave empty to use version: ' . PhpFpm::getVersion(true));
+
+    /**
+     * List MySQL Database.
+     */
+    $app->command('db:list', function () {
+        Mysql::listDatabases();
+    })->descriptions('List all available database in MySQL');
+
+    /**
+     * Create new database in MySQL.
+     */
+    $app->command('db:create [database_name]', function ($database_name) {
+        Mysql::createDatabase($database_name);
+    })->descriptions('Create new database in MySQL');
+
+    /**
+     * Drop database in MySQL.
+     */
+    $app->command('db:drop [database_name] [-y|--yes]', function ($input, $output, $database_name) {
+        $helper = $this->getHelperSet()->get('question');
+        $defaults = $input->getOptions();
+        if (!$defaults['yes']) {
+            $question = new ConfirmationQuestion('Are you sure you want to delete the database? [y/N] ', false);
+            if (!$helper->ask($input, $output, $question)) {
+                warning('Aborted');
+
+                return;
+            }
+        }
+        Mysql::dropDatabase($database_name);
+    })->descriptions('Drop given database from MySQL');
+
+    /**
+     * Reset database in MySQL.
+     */
+    $app->command('db:reset [database_name] [-y|--yes]', function ($input, $output, $database_name) {
+        $helper = $this->getHelperSet()->get('question');
+        $defaults = $input->getOptions();
+        if (!$defaults['yes']) {
+            $question = new ConfirmationQuestion('Are you sure you want to reset the database? [y/N] ', false);
+            if (!$helper->ask($input, $output, $question)) {
+                warning('Aborted');
+
+                return;
+            }
+        }
+        $dropDB = Mysql::dropDatabase($database_name);
+        if (!$dropDB) {
+            warning('Error resetting database');
+
+            return;
+        }
+
+        $databaseName = Mysql::createDatabase($database_name);
+
+        if (!$databaseName) {
+            warning('Error resetting database');
+
+            return;
+        }
+
+        info("Database [{$database_name}] reset successfully");
+    })->descriptions('Clear all tables for given database in MySQL');
+
+    /**
+     * Import database in MySQL.
+     */
+    $app->command('db:import [database_name] [dump_file]', function ($input, $output, $database_name, $dump_file) {
+        $helper = $this->getHelperSet()->get('question');
+        info('Importing database...');
+        if (!$database_name) {
+            throw new Exception('Please provide database name');
+        }
+        if (!$dump_file) {
+            throw new Exception('Please provide a dump file');
+        }
+        if (!file_exists($dump_file)) {
+            throw new Exception("Unable to locate [$dump_file]");
+        }
+        $isExistsDatabase = false;
+        // check if database already exists.
+        if (Mysql::isDatabaseExists($database_name)) {
+            $question = new ConfirmationQuestion('Database already exists are you sure you want to continue? [y/N] ', false);
+            if (!$helper->ask($input, $output, $question)) {
+                warning('Aborted');
+
+                return;
+            }
+            $isExistsDatabase = true;
+        }
+
+        Mysql::importDatabase($dump_file, $database_name, $isExistsDatabase);
+    })->descriptions('Import dump file for selected database in MySQL');
+
+    /**
+     * Export database in MySQL.
+     */
+    $app->command('db:export [database_name] [--sql]', function ($input, $database_name) {
+        info('Exporting database...');
+        $defaults = $input->getOptions();
+        $data = Mysql::exportDatabase($database_name, $defaults['sql']);
+        info("Database [{$data['database']}] exported into file {$data['filename']}");
+    })->descriptions('Export selected MySQL database');
+
+    /**
+     * Change root user password in MySQL.
+     */
+    $app->command('db:password [current_password] [new_password]', function ($current_password, $new_password) {
+        if ($current_password === null || $new_password === null) {
+            throw new Exception('Missing arguments to change root user password. Use: "valet db:password [current_password] [new_password]"');
+        }
+        info('Setting password for root user...');
+        Mysql::setRootPassword($current_password, $new_password);
+    })->descriptions('Change MySQL root user password');
 }
 
 /**
