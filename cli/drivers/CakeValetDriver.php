@@ -8,12 +8,11 @@ class CakeValetDriver extends ValetDriver
      * @param string $sitePath
      * @param string $siteName
      * @param string $uri
-     *
      * @return bool
      */
     public function serves($sitePath, $siteName, $uri)
     {
-        return file_exists($sitePath.'/bin/cake');
+        return file_exists($sitePath . '/bin/cake');
     }
 
     /**
@@ -22,12 +21,11 @@ class CakeValetDriver extends ValetDriver
      * @param string $sitePath
      * @param string $siteName
      * @param string $uri
-     *
      * @return string|false
      */
     public function isStaticFile($sitePath, $siteName, $uri)
     {
-        if ($this->isActualFile($staticFilePath = $sitePath.'/webroot/'.$uri)) {
+        if ($this->isActualFile($staticFilePath = $sitePath . '/webroot/' . $uri)) {
             return $staticFilePath;
         }
 
@@ -40,16 +38,15 @@ class CakeValetDriver extends ValetDriver
      * @param string $sitePath
      * @param string $siteName
      * @param string $uri
-     *
      * @return string
      */
     public function frontControllerPath($sitePath, $siteName, $uri)
     {
-        $_SERVER['DOCUMENT_ROOT'] = $sitePath.'/webroot';
-        $_SERVER['SCRIPT_FILENAME'] = $sitePath.'/webroot/index.php';
+        $_SERVER['DOCUMENT_ROOT'] = $sitePath . '/webroot';
+        $_SERVER['SCRIPT_FILENAME'] = $sitePath . '/webroot/index.php';
         $_SERVER['SCRIPT_NAME'] = '/index.php';
         $_SERVER['PHP_SELF'] = '/index.php';
 
-        return $sitePath.'/webroot/index.php';
+        return $sitePath . '/webroot/index.php';
     }
 }

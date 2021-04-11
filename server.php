@@ -3,201 +3,156 @@
 /**
  * Define the user's "~/.valet" path.
  */
-define('VALET_HOME_PATH', posix_getpwuid(fileowner(__FILE__))['dir'].'/.valet');
+
+define('VALET_HOME_PATH', posix_getpwuid(fileowner(__FILE__))['dir'] . '/.valet');
 define('VALET_STATIC_PREFIX', '41c270e4-5535-4daa-b23e-c269744c2f45');
 
+if (!function_exists('show_valet_404')) {
 /**
  * Show the Valet 404 "Not Found" page.
  */
-function show_valet_404()
-{
-    http_response_code(404);
-    require __DIR__.'/cli/templates/404.html';
-    exit;
-}
-
-/**
- * Show the Valet 404 "Not Found" page.
- *
- * @param string $directory
- * @param string $siteName
- * @param string $uri
- * @param array  $ignoredPaths
- */
-function show_project_directory($directory, $siteName, $uri, $ignoredPaths = ['.'])
-{
-    if (!substr($uri, 0, -1)) {
-        $ignoredPaths[] = '..';
+    function show_valet_404()
+    {
+        http_response_code(404);
+        require __DIR__ . '/cli/templates/404.html';
+        exit;
     }
-    require __DIR__.'/cli/templates/directory.php';
-    exit;
 }
 
-/**
- * Show available sites.
- *
- * @param array $valetConfig
- */
-function show_available_sites($valetConfig)
-{
-    $availableSites = [];
-    foreach ($valetConfig['paths'] as $path) {
-        foreach (glob($path.'/*', GLOB_ONLYDIR) as $dirPath) {
-            $slug = valet_path_to_slug($dirPath);
-            $availableSites[$slug] = ucfirst(str_replace('-', ' ', $slug));
-        }
-    }
-    require __DIR__.'/cli/templates/sites.php';
-    exit;
-}
-
+if (!function_exists('valet_support_xip_io')) {
 /**
  * @param $domain string Domain to filter
  *
  * @return string Filtered domain (without xip.io feature)
  */
-function valet_support_xip_io($domain)
-{
-    if (substr($domain, -7) === '.xip.io') {
-        // support only ip v4 for now
-        $domainPart = explode('.', $domain);
-        if (count($domainPart) > 6) {
-            $domain = implode('.', array_reverse(array_slice(array_reverse($domainPart), 6)));
+    function valet_support_xip_io($domain)
+    {
+        if (substr($domain, -7) === '.xip.io') {
+            // support only ip v4 for now
+            $domainPart = explode('.', $domain);
+            if (count($domainPart) > 6) {
+                $domain = implode('.', array_reverse(array_slice(array_reverse($domainPart), 6)));
+            }
         }
-    }
 
-    if (strpos($domain, ':') !== false) {
-        $domain = explode(':', $domain)[0];
-    }
+        if (strpos($domain, ':') !== false) {
+            $domain = explode(':', $domain)[0];
+        }
 
-    return $domain;
+        return $domain;
+    }
 }
 
+if (!function_exists('valet_path_to_slug')) {
 /**
  * Convert absolute path to slug.
  *
  * @param string $path
- *
  * @return string Slug version of last folder name
  */
-function valet_path_to_slug($path)
-{
-    $replace = [
-        '&lt;'   => '', '&gt;' => '', '&#039;' => '', '&amp;' => '',
-        '&quot;' => '', 'À' => 'A', 'Á' => 'A', 'Â' => 'A', 'Ã' => 'A', 'Ä' => 'Ae',
-        '&Auml;' => 'A', 'Å' => 'A', 'Ā' => 'A', 'Ą' => 'A', 'Ă' => 'A', 'Æ' => 'Ae',
-        'Ç'      => 'C', 'Ć' => 'C', 'Č' => 'C', 'Ĉ' => 'C', 'Ċ' => 'C', 'Ď' => 'D', 'Đ' => 'D',
-        'Ð'      => 'D', 'È' => 'E', 'É' => 'E', 'Ê' => 'E', 'Ë' => 'E', 'Ē' => 'E',
-        'Ę'      => 'E', 'Ě' => 'E', 'Ĕ' => 'E', 'Ė' => 'E', 'Ĝ' => 'G', 'Ğ' => 'G',
-        'Ġ'      => 'G', 'Ģ' => 'G', 'Ĥ' => 'H', 'Ħ' => 'H', 'Ì' => 'I', 'Í' => 'I',
-        'Î'      => 'I', 'Ï' => 'I', 'Ī' => 'I', 'Ĩ' => 'I', 'Ĭ' => 'I', 'Į' => 'I',
-        'İ'      => 'I', 'Ĳ' => 'IJ', 'Ĵ' => 'J', 'Ķ' => 'K', 'Ł' => 'K', 'Ľ' => 'K',
-        'Ĺ'      => 'K', 'Ļ' => 'K', 'Ŀ' => 'K', 'Ñ' => 'N', 'Ń' => 'N', 'Ň' => 'N',
-        'Ņ'      => 'N', 'Ŋ' => 'N', 'Ò' => 'O', 'Ó' => 'O', 'Ô' => 'O', 'Õ' => 'O',
-        'Ö'      => 'Oe', '&Ouml;' => 'Oe', 'Ø' => 'O', 'Ō' => 'O', 'Ő' => 'O', 'Ŏ' => 'O',
-        'Œ'      => 'OE', 'Ŕ' => 'R', 'Ř' => 'R', 'Ŗ' => 'R', 'Ś' => 'S', 'Š' => 'S',
-        'Ş'      => 'S', 'Ŝ' => 'S', 'Ș' => 'S', 'Ť' => 'T', 'Ţ' => 'T', 'Ŧ' => 'T',
-        'Ț'      => 'T', 'Ù' => 'U', 'Ú' => 'U', 'Û' => 'U', 'Ü' => 'Ue', 'Ū' => 'U',
-        '&Uuml;' => 'Ue', 'Ů' => 'U', 'Ű' => 'U', 'Ŭ' => 'U', 'Ũ' => 'U', 'Ų' => 'U',
-        'Ŵ'      => 'W', 'Ý' => 'Y', 'Ŷ' => 'Y', 'Ÿ' => 'Y', 'Ź' => 'Z', 'Ž' => 'Z',
-        'Ż'      => 'Z', 'Þ' => 'T', 'à' => 'a', 'á' => 'a', 'â' => 'a', 'ã' => 'a',
-        'ä'      => 'ae', '&auml;' => 'ae', 'å' => 'a', 'ā' => 'a', 'ą' => 'a', 'ă' => 'a',
-        'æ'      => 'ae', 'ç' => 'c', 'ć' => 'c', 'č' => 'c', 'ĉ' => 'c', 'ċ' => 'c',
-        'ď'      => 'd', 'đ' => 'd', 'ð' => 'd', 'è' => 'e', 'é' => 'e', 'ê' => 'e',
-        'ë'      => 'e', 'ē' => 'e', 'ę' => 'e', 'ě' => 'e', 'ĕ' => 'e', 'ė' => 'e',
-        'ƒ'      => 'f', 'ĝ' => 'g', 'ğ' => 'g', 'ġ' => 'g', 'ģ' => 'g', 'ĥ' => 'h',
-        'ħ'      => 'h', 'ì' => 'i', 'í' => 'i', 'î' => 'i', 'ï' => 'i', 'ī' => 'i',
-        'ĩ'      => 'i', 'ĭ' => 'i', 'į' => 'i', 'ı' => 'i', 'ĳ' => 'ij', 'ĵ' => 'j',
-        'ķ'      => 'k', 'ĸ' => 'k', 'ł' => 'l', 'ľ' => 'l', 'ĺ' => 'l', 'ļ' => 'l',
-        'ŀ'      => 'l', 'ñ' => 'n', 'ń' => 'n', 'ň' => 'n', 'ņ' => 'n', 'ŉ' => 'n',
-        'ŋ'      => 'n', 'ò' => 'o', 'ó' => 'o', 'ô' => 'o', 'õ' => 'o', 'ö' => 'oe',
-        '&ouml;' => 'oe', 'ø' => 'o', 'ō' => 'o', 'ő' => 'o', 'ŏ' => 'o', 'œ' => 'oe',
-        'ŕ'      => 'r', 'ř' => 'r', 'ŗ' => 'r', 'š' => 's', 'ù' => 'u', 'ú' => 'u',
-        'û'      => 'u', 'ü' => 'ue', 'ū' => 'u', '&uuml;' => 'ue', 'ů' => 'u', 'ű' => 'u',
-        'ŭ'      => 'u', 'ũ' => 'u', 'ų' => 'u', 'ŵ' => 'w', 'ý' => 'y', 'ÿ' => 'y',
-        'ŷ'      => 'y', 'ž' => 'z', 'ż' => 'z', 'ź' => 'z', 'þ' => 't', 'ß' => 'ss',
-        'ſ'      => 'ss', 'ый' => 'iy', 'А' => 'A', 'Б' => 'B', 'В' => 'V', 'Г' => 'G',
-        'Д'      => 'D', 'Е' => 'E', 'Ё' => 'YO', 'Ж' => 'ZH', 'З' => 'Z', 'И' => 'I',
-        'Й'      => 'Y', 'К' => 'K', 'Л' => 'L', 'М' => 'M', 'Н' => 'N', 'О' => 'O',
-        'П'      => 'P', 'Р' => 'R', 'С' => 'S', 'Т' => 'T', 'У' => 'U', 'Ф' => 'F',
-        'Х'      => 'H', 'Ц' => 'C', 'Ч' => 'CH', 'Ш' => 'SH', 'Щ' => 'SCH', 'Ъ' => '',
-        'Ы'      => 'Y', 'Ь' => '', 'Э' => 'E', 'Ю' => 'YU', 'Я' => 'YA', 'а' => 'a',
-        'б'      => 'b', 'в' => 'v', 'г' => 'g', 'д' => 'd', 'е' => 'e', 'ё' => 'yo',
-        'ж'      => 'zh', 'з' => 'z', 'и' => 'i', 'й' => 'y', 'к' => 'k', 'л' => 'l',
-        'м'      => 'm', 'н' => 'n', 'о' => 'o', 'п' => 'p', 'р' => 'r', 'с' => 's',
-        'т'      => 't', 'у' => 'u', 'ф' => 'f', 'х' => 'h', 'ц' => 'c', 'ч' => 'ch',
-        'ш'      => 'sh', 'щ' => 'sch', 'ъ' => '', 'ы' => 'y', 'ь' => '', 'э' => 'e',
-        'ю'      => 'yu', 'я' => 'ya',
-    ];
+    function valet_path_to_slug($path)
+    {
+        $replace = [
+            '&lt;' => '', '&gt;' => '', '&#039;' => '', '&amp;' => '',
+            '&quot;' => '', 'À' => 'A', 'Á' => 'A', 'Â' => 'A', 'Ã' => 'A', 'Ä' => 'Ae',
+            '&Auml;' => 'A', 'Å' => 'A', 'Ā' => 'A', 'Ą' => 'A', 'Ă' => 'A', 'Æ' => 'Ae',
+            'Ç' => 'C', 'Ć' => 'C', 'Č' => 'C', 'Ĉ' => 'C', 'Ċ' => 'C', 'Ď' => 'D', 'Đ' => 'D',
+            'Ð' => 'D', 'È' => 'E', 'É' => 'E', 'Ê' => 'E', 'Ë' => 'E', 'Ē' => 'E',
+            'Ę' => 'E', 'Ě' => 'E', 'Ĕ' => 'E', 'Ė' => 'E', 'Ĝ' => 'G', 'Ğ' => 'G',
+            'Ġ' => 'G', 'Ģ' => 'G', 'Ĥ' => 'H', 'Ħ' => 'H', 'Ì' => 'I', 'Í' => 'I',
+            'Î' => 'I', 'Ï' => 'I', 'Ī' => 'I', 'Ĩ' => 'I', 'Ĭ' => 'I', 'Į' => 'I',
+            'İ' => 'I', 'Ĳ' => 'IJ', 'Ĵ' => 'J', 'Ķ' => 'K', 'Ł' => 'K', 'Ľ' => 'K',
+            'Ĺ' => 'K', 'Ļ' => 'K', 'Ŀ' => 'K', 'Ñ' => 'N', 'Ń' => 'N', 'Ň' => 'N',
+            'Ņ' => 'N', 'Ŋ' => 'N', 'Ò' => 'O', 'Ó' => 'O', 'Ô' => 'O', 'Õ' => 'O',
+            'Ö' => 'Oe', '&Ouml;' => 'Oe', 'Ø' => 'O', 'Ō' => 'O', 'Ő' => 'O', 'Ŏ' => 'O',
+            'Œ' => 'OE', 'Ŕ' => 'R', 'Ř' => 'R', 'Ŗ' => 'R', 'Ś' => 'S', 'Š' => 'S',
+            'Ş' => 'S', 'Ŝ' => 'S', 'Ș' => 'S', 'Ť' => 'T', 'Ţ' => 'T', 'Ŧ' => 'T',
+            'Ț' => 'T', 'Ù' => 'U', 'Ú' => 'U', 'Û' => 'U', 'Ü' => 'Ue', 'Ū' => 'U',
+            '&Uuml;' => 'Ue', 'Ů' => 'U', 'Ű' => 'U', 'Ŭ' => 'U', 'Ũ' => 'U', 'Ų' => 'U',
+            'Ŵ' => 'W', 'Ý' => 'Y', 'Ŷ' => 'Y', 'Ÿ' => 'Y', 'Ź' => 'Z', 'Ž' => 'Z',
+            'Ż' => 'Z', 'Þ' => 'T', 'à' => 'a', 'á' => 'a', 'â' => 'a', 'ã' => 'a',
+            'ä' => 'ae', '&auml;' => 'ae', 'å' => 'a', 'ā' => 'a', 'ą' => 'a', 'ă' => 'a',
+            'æ' => 'ae', 'ç' => 'c', 'ć' => 'c', 'č' => 'c', 'ĉ' => 'c', 'ċ' => 'c',
+            'ď' => 'd', 'đ' => 'd', 'ð' => 'd', 'è' => 'e', 'é' => 'e', 'ê' => 'e',
+            'ë' => 'e', 'ē' => 'e', 'ę' => 'e', 'ě' => 'e', 'ĕ' => 'e', 'ė' => 'e',
+            'ƒ' => 'f', 'ĝ' => 'g', 'ğ' => 'g', 'ġ' => 'g', 'ģ' => 'g', 'ĥ' => 'h',
+            'ħ' => 'h', 'ì' => 'i', 'í' => 'i', 'î' => 'i', 'ï' => 'i', 'ī' => 'i',
+            'ĩ' => 'i', 'ĭ' => 'i', 'į' => 'i', 'ı' => 'i', 'ĳ' => 'ij', 'ĵ' => 'j',
+            'ķ' => 'k', 'ĸ' => 'k', 'ł' => 'l', 'ľ' => 'l', 'ĺ' => 'l', 'ļ' => 'l',
+            'ŀ' => 'l', 'ñ' => 'n', 'ń' => 'n', 'ň' => 'n', 'ņ' => 'n', 'ŉ' => 'n',
+            'ŋ' => 'n', 'ò' => 'o', 'ó' => 'o', 'ô' => 'o', 'õ' => 'o', 'ö' => 'oe',
+            '&ouml;' => 'oe', 'ø' => 'o', 'ō' => 'o', 'ő' => 'o', 'ŏ' => 'o', 'œ' => 'oe',
+            'ŕ' => 'r', 'ř' => 'r', 'ŗ' => 'r', 'š' => 's', 'ù' => 'u', 'ú' => 'u',
+            'û' => 'u', 'ü' => 'ue', 'ū' => 'u', '&uuml;' => 'ue', 'ů' => 'u', 'ű' => 'u',
+            'ŭ' => 'u', 'ũ' => 'u', 'ų' => 'u', 'ŵ' => 'w', 'ý' => 'y', 'ÿ' => 'y',
+            'ŷ' => 'y', 'ž' => 'z', 'ż' => 'z', 'ź' => 'z', 'þ' => 't', 'ß' => 'ss',
+            'ſ' => 'ss', 'ый' => 'iy', 'А' => 'A', 'Б' => 'B', 'В' => 'V', 'Г' => 'G',
+            'Д' => 'D', 'Е' => 'E', 'Ё' => 'YO', 'Ж' => 'ZH', 'З' => 'Z', 'И' => 'I',
+            'Й' => 'Y', 'К' => 'K', 'Л' => 'L', 'М' => 'M', 'Н' => 'N', 'О' => 'O',
+            'П' => 'P', 'Р' => 'R', 'С' => 'S', 'Т' => 'T', 'У' => 'U', 'Ф' => 'F',
+            'Х' => 'H', 'Ц' => 'C', 'Ч' => 'CH', 'Ш' => 'SH', 'Щ' => 'SCH', 'Ъ' => '',
+            'Ы' => 'Y', 'Ь' => '', 'Э' => 'E', 'Ю' => 'YU', 'Я' => 'YA', 'а' => 'a',
+            'б' => 'b', 'в' => 'v', 'г' => 'g', 'д' => 'd', 'е' => 'e', 'ё' => 'yo',
+            'ж' => 'zh', 'з' => 'z', 'и' => 'i', 'й' => 'y', 'к' => 'k', 'л' => 'l',
+            'м' => 'm', 'н' => 'n', 'о' => 'o', 'п' => 'p', 'р' => 'r', 'с' => 's',
+            'т' => 't', 'у' => 'u', 'ф' => 'f', 'х' => 'h', 'ц' => 'c', 'ч' => 'ch',
+            'ш' => 'sh', 'щ' => 'sch', 'ъ' => '', 'ы' => 'y', 'ь' => '', 'э' => 'e',
+            'ю' => 'yu', 'я' => 'ya',
+        ];
 
-    // make a human readable string
-    $slug = strtr(basename($path), $replace);
+        // make a human readable string
+        $slug = strtr(basename($path), $replace);
 
-    // replace non letter or digits by -
-    $slug = preg_replace('~[^\\pL\d.]+~u', '-', $slug);
+        // replace non letter or digits by -
+        $slug = preg_replace('~[^\\pL\d.]+~u', '-', $slug);
 
-    // trim
-    $slug = trim($slug, '-');
+        // trim
+        $slug = trim($slug, '-');
 
-    // remove unwanted characters
-    $slug = preg_replace('~[^-\w.]+~', '', $slug);
+        // remove unwanted characters
+        $slug = preg_replace('~[^-\w.]+~', '', $slug);
 
-    return strtolower($slug);
+        return strtolower($slug);
+    }
+}
+if (!function_exists('valet_default_site_path')) {
+/*
+ * @param array $config Valet configuration array
+ *
+ * @return string|null If set, default site path for uncaught urls
+ * */
+    function valet_default_site_path($config)
+    {
+        if (isset($config['default']) && is_string($config['default']) && is_dir($config['default'])) {
+            return $config['default'];
+        }
+
+        return null;
+    }
 }
 
 /**
  * Load the Valet configuration.
  */
 $valetConfig = json_decode(
-    file_get_contents(VALET_HOME_PATH.'/config.json'),
-    true
+    file_get_contents(VALET_HOME_PATH . '/config.json'), true
 );
 
 /**
  * Parse the URI and site / host for the incoming request.
  */
 $uri = rawurldecode(
-    explode('?', $_SERVER['REQUEST_URI'])[0]
+    explode("?", $_SERVER['REQUEST_URI'])[0]
 );
 
 $siteName = basename(
 // Filter host to support xip.io feature
     valet_support_xip_io(explode(':', strtolower($_SERVER['HTTP_HOST']))[0]),
-    '.'.$valetConfig['domain']
+    '.' . $valetConfig['domain']
 );
 
 if (strpos($siteName, 'www.') === 0) {
     $siteName = substr($siteName, 4);
-}
-
-/**
- * Validate if request is from Remote IP.
- * */
-if ($_SERVER['SERVER_ADDR'] !== '127.0.0.1') {
-    if (strpos($uri, '/') === 0) {
-        $urlParam = substr($uri, 1, strlen($uri));
-        if (substr($urlParam, -1) === '/') {
-            $urlParam = substr($urlParam, 0, -1);
-        }
-        if (strtolower($urlParam) === 'valet-sites') {
-            $urlParams = parse_url($_SERVER['REQUEST_URI']);
-            if (isset($urlParams['query'])) {
-                parse_str($urlParams['query'], $parameters);
-                if ($parameters['use']) {
-                    setcookie('valet_remote_path', $parameters['use'], 0);
-                    header('Location: /');
-                    exit;
-                }
-            }
-            show_available_sites($valetConfig);
-            exit;
-        }
-    }
-    if (!isset($_COOKIE['valet_remote_path'])) {
-        header('Location: /valet-sites');
-        exit;
-    }
-    $siteName = $_COOKIE['valet_remote_path'];
 }
 
 /**
@@ -207,10 +162,10 @@ $valetSitePath = null;
 
 foreach ($valetConfig['paths'] as $path) {
     $domain = ($pos = strrpos($siteName, '.')) !== false
-        ? substr($siteName, $pos + 1)
-        : null;
+    ? substr($siteName, $pos + 1)
+    : null;
 
-    foreach (glob($path.'/*', GLOB_ONLYDIR) as $dirPath) {
+    foreach (glob($path . '/*', GLOB_ONLYDIR) as $dirPath) {
         $slug = valet_path_to_slug($dirPath);
 
         if ($slug == $siteName || $slug == $domain) {
@@ -221,7 +176,7 @@ foreach ($valetConfig['paths'] as $path) {
     }
 }
 
-if (is_null($valetSitePath)) {
+if (is_null($valetSitePath) && is_null($valetSitePath = valet_default_site_path($valetConfig))) {
     show_valet_404();
 }
 
@@ -230,7 +185,7 @@ if (is_null($valetSitePath)) {
  */
 $valetDriver = null;
 
-require __DIR__.'/cli/drivers/require.php';
+require __DIR__ . '/cli/drivers/require.php';
 
 $valetDriver = ValetDriver::assign($valetSitePath, $siteName, $uri);
 
@@ -256,23 +211,20 @@ $uri = $valetDriver->mutateUri($uri);
 $isPhpFile = pathinfo($uri, PATHINFO_EXTENSION) === 'php';
 
 if ($uri !== '/' && !$isPhpFile && $staticFilePath = $valetDriver->isStaticFile($valetSitePath, $siteName, $uri)) {
-    return $valetDriver->serveStaticFile($staticFilePath, $valetSitePath, $siteName, $uri);
+    $valetDriver->serveStaticFile($staticFilePath, $valetSitePath, $siteName, $uri);
+
+    return;
 }
 
 /**
  * Attempt to dispatch to a front controller.
  */
 $frontControllerPath = $valetDriver->frontControllerPath(
-    $valetSitePath,
-    $siteName,
-    $uri
+    $valetSitePath, $siteName, $uri
 );
+
 if (!$frontControllerPath) {
-    if (is_dir($valetSitePath.$uri)) {
-        show_project_directory($valetSitePath, $siteName, $uri);
-    } else {
-        show_valet_404();
-    }
+    show_valet_404();
 }
 
 chdir(dirname($frontControllerPath));

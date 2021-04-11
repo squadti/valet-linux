@@ -21,8 +21,8 @@ class Valet
     public $files;
 
     public $valetBin = '/usr/local/bin/valet';
-    public $sudoers = '/etc/sudoers.d/valet';
-    public $github = 'https://api.github.com/repos/genesisweb/valet-linux-plus/releases/latest';
+    public $sudoers  = '/etc/sudoers.d/valet';
+    public $github   = 'https://api.github.com/repos/cpriego/valet-linux/releases/latest';
 
     /**
      * Create a new Valet instance.
@@ -43,12 +43,12 @@ class Valet
      */
     public function symlinkToUsersBin()
     {
-        $this->cli->run('ln -snf '.realpath(__DIR__.'/../../valet').' '.$this->valetBin);
+        $this->cli->run('ln -snf ' . dirname(__DIR__, 2) . '/valet' . ' ' . $this->valetBin);
     }
 
     /**
      * Unlink the Valet Bash script from the user's local bin
-     * and the sudoers.d entry.
+     * and the sudoers.d entry
      *
      * @return void
      */
@@ -65,52 +65,36 @@ class Valet
      */
     public function extensions()
     {
-        if (!$this->files->isDir(VALET_HOME_PATH.'/Extensions')) {
+        if (!$this->files->isDir(VALET_HOME_PATH . '/Extensions')) {
             return [];
         }
 
-        return collect($this->files->scandir(VALET_HOME_PATH.'/Extensions'))
-                    ->reject(function ($file) {
-                        return is_dir($file);
-                    })
-                    ->map(function ($file) {
-                        return VALET_HOME_PATH.'/Extensions/'.$file;
-                    })
-                    ->values()->all();
+        return collect($this->files->scandir(VALET_HOME_PATH . '/Extensions'))
+            ->reject(static function ($file) {
+                return is_dir($file);
+            })
+            ->map(static function ($file) {
+                return VALET_HOME_PATH . '/Extensions/' . $file;
+            })
+            ->values()->all();
     }
 
     /**
      * Determine if this is the latest version of Valet.
      *
      * @param string $currentVersion
-     *
-     * @throws \Exception
-     *
      * @return bool
+     * @throws \Httpful\Exception\ConnectionErrorException
      */
-    public function onLatestVersion($currentVersion)
+    public function onLatestVersion($currentVersion): bool
     {
         $response = \Httpful\Request::get($this->github)->send();
 
-        return version_compare($currentVersion, (isset($response->body->tag_name) ? trim($response->body->tag_name) : 'v1.0.0'), '>=');
+        return version_compare($currentVersion, trim($response->body->tag_name), '>=');
     }
 
     /**
-     * Retrieve the latest version of Valet Linux Plus.
-     *
-     * @throws \Exception
-     *
-     * @return string
-     */
-    public function getLatestVersion()
-    {
-        $response = \Httpful\Request::get($this->github)->send();
-
-        return isset($response->body->tag_name) ? trim($response->body->tag_name) : false;
-    }
-
-    /**
-     * Determine current environment.
+     * Determine current environment
      *
      * @return void
      */
@@ -121,7 +105,7 @@ class Valet
     }
 
     /**
-     * Configure package manager.
+     * Configure package manager
      *
      * @return void
      */
@@ -131,11 +115,11 @@ class Valet
     }
 
     /**
-     * Determine the first available package manager.
+     * Determine the first available package manager
      *
      * @return string
      */
-    public function getAvailablePackageManager()
+    public function getAvailablePackageManager(): string
     {
         return collect([
             Apt::class,
@@ -144,15 +128,15 @@ class Valet
             Yum::class,
             PackageKit::class,
             Eopkg::class,
-        ])->first(function ($pm) {
+        ])->first(static function ($pm) {
             return resolve($pm)->isAvailable();
-        }, function () {
-            throw new DomainException('No compatible package manager found.');
+        }, static function () {
+            throw new DomainException("No compatible package manager found.");
         });
     }
 
     /**
-     * Configure service manager.
+     * Configure service manager
      *
      * @return void
      */
@@ -162,7 +146,7 @@ class Valet
     }
 
     /**
-     * Determine the first available service manager.
+     * Determine the first available service manager
      *
      * @return string
      */
@@ -171,10 +155,10 @@ class Valet
         return collect([
             LinuxService::class,
             Systemd::class,
-        ])->first(function ($pm) {
+        ])->first(static function ($pm) {
             return resolve($pm)->isAvailable();
-        }, function () {
-            throw new DomainException('No compatible service manager found.');
+        }, static function () {
+            throw new DomainException("No compatible service manager found.");
         });
     }
 }

@@ -26,7 +26,6 @@ class Nginx
      * @param Filesystem     $files
      * @param Configuration  $configuration
      * @param Site           $site
-     *
      * @return void
      */
     public function __construct(PackageManager $pm, ServiceManager $sm, CommandLine $cli, Filesystem $files, Configuration $configuration, Site $site)
@@ -67,7 +66,7 @@ class Nginx
      */
     public function installConfiguration()
     {
-        $contents = $this->files->get(__DIR__.'/../stubs/nginx.conf');
+        $contents = $this->files->get(__DIR__ . '/../stubs/nginx.conf');
         $nginx = $this->nginx_conf;
 
         $pid_string = 'pid /run/nginx.pid';
@@ -82,10 +81,10 @@ class Nginx
         $this->files->putAsUser(
             $nginx,
             str_array_replace([
-                'VALET_USER'      => user(),
-                'VALET_GROUP'     => group(),
+                'VALET_USER' => user(),
+                'VALET_GROUP' => group(),
                 'VALET_HOME_PATH' => VALET_HOME_PATH,
-                'VALET_PID'       => $pid_string,
+                'VALET_PID' => $pid_string,
             ], $contents)
         );
     }
@@ -102,7 +101,7 @@ class Nginx
             str_replace(
                 ['VALET_HOME_PATH', 'VALET_SERVER_PATH', 'VALET_STATIC_PREFIX', 'VALET_PORT'],
                 [VALET_HOME_PATH, VALET_SERVER_PATH, VALET_STATIC_PREFIX, $this->configuration->read()['port']],
-                $this->files->get(__DIR__.'/../stubs/valet.conf')
+                $this->files->get(__DIR__ . '/../stubs/valet.conf')
             )
         );
 
@@ -115,7 +114,7 @@ class Nginx
 
         $this->files->putAsUser(
             '/etc/nginx/fastcgi_params',
-            $this->files->get(__DIR__.'/../stubs/fastcgi_params')
+            $this->files->get(__DIR__ . '/../stubs/fastcgi_params')
         );
     }
 
@@ -128,11 +127,11 @@ class Nginx
      */
     public function installNginxDirectory()
     {
-        if (!$this->files->isDir($nginxDirectory = VALET_HOME_PATH.'/Nginx')) {
+        if (!$this->files->isDir($nginxDirectory = VALET_HOME_PATH . '/Nginx')) {
             $this->files->mkdirAsUser($nginxDirectory);
         }
 
-        $this->files->putAsUser($nginxDirectory.'/.keep', "\n");
+        $this->files->putAsUser($nginxDirectory . '/.keep', "\n");
 
         $this->rewriteSecureNginxFiles();
     }
@@ -141,7 +140,6 @@ class Nginx
      * Update the port used by Nginx.
      *
      * @param string $newPort
-     *
      * @return void
      */
     public function updatePort($newPort)
@@ -149,9 +147,9 @@ class Nginx
         $this->files->putAsUser(
             $this->sites_available_conf,
             str_replace(
-                ['VALET_HOME_PATH', 'VALET_SERVER_PATH', 'VALET_PORT'],
-                [VALET_HOME_PATH, VALET_SERVER_PATH, $newPort],
-                $this->files->get(__DIR__.'/../stubs/valet.conf')
+                ['VALET_HOME_PATH', 'VALET_SERVER_PATH', 'VALET_STATIC_PREFIX', 'VALET_PORT'],
+                [VALET_HOME_PATH, VALET_SERVER_PATH, VALET_STATIC_PREFIX, $newPort],
+                $this->files->get(__DIR__ . '/../stubs/valet.conf')
             )
         );
     }

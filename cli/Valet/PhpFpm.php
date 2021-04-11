@@ -21,7 +21,6 @@ class PhpFpm
      * @param ServiceManager $sm
      * @param CommandLine    $cli
      * @param Filesystem     $files
-     *
      * @return void
      */
     public function __construct(PackageManager $pm, ServiceManager $sm, CommandLine $cli, Filesystem $files)
@@ -59,8 +58,12 @@ class PhpFpm
      */
     public function uninstall()
     {
-        if ($this->files->exists($this->fpmConfigPath().'/valet.conf')) {
-            $this->files->unlink($this->fpmConfigPath().'/valet.conf');
+        if ($this->files->exists('/etc/systemd/system/php-fpm.service.d/valet.conf')) {
+            unlink('/etc/systemd/system/php-fpm.service.d/valet.conf');
+        }
+
+        if ($this->files->exists($this->fpmConfigPath() . '/valet.conf')) {
+            $this->files->unlink($this->fpmConfigPath() . '/valet.conf');
             $this->stop();
         }
     }
@@ -69,25 +72,23 @@ class PhpFpm
      * Change the php-fpm version.
      *
      * @param string|float|int $version
-     * @param bool|null        $updateCli
      *
      * @return void
      */
-    public function changeVersion($version = null, $updateCli = null)
+    public function changeVersion($version = null)
     {
         $oldVersion = $this->version;
         $exception = null;
 
         $this->stop();
-        info('Disabling php'.$this->version.'-fpm...');
+        info('Disabling php' . $this->version . '-fpm...');
         $this->sm->disable($this->fpmServiceName());
 
         if (!isset($version) || strtolower($version) === 'default') {
-            $version = $this->getVersion(true);
+            $this->version = $this->getVersion(true);
+        } else {
             $this->version = $version;
         }
-
-        $this->version = $version;
 
         try {
             $this->install();
@@ -95,35 +96,20 @@ class PhpFpm
             $this->version = $oldVersion;
             $exception = $e;
         }
-//        if($exception === null) {
-//        if($oldVersion != $version) {
-//            $installedModules = $this->cli->run("php{$oldVersion} -m");
-//            $installedModules = str_replace("[PHP Modules]", '', $installedModules);
-//            $installedModules = str_replace("[Zend Modules]", '', $installedModules);
-//            $installedModules = array_filter(explode("\n",$installedModules));
-//            foreach($installedModules as $module) {
-//                $this->pm->ensureInstalled("php{$version}-{$module}");
-//            }
-//        }
-//        }
 
         if ($this->sm->disabled($this->fpmServiceName())) {
-            info('Enabling php'.$this->version.'-fpm...');
+            info('Enabling php' . $this->version . '-fpm...');
             $this->sm->enable($this->fpmServiceName());
         }
 
         if ($this->version !== $this->getVersion(true)) {
-            $this->files->putAsUser(VALET_HOME_PATH.'/use_php_version', $this->version);
+            $this->files->putAsUser(VALET_HOME_PATH . '/use_php_version', $this->version);
         } else {
-            $this->files->unlink(VALET_HOME_PATH.'/use_php_version');
-        }
-        if ($updateCli) {
-            $this->cli->run("update-alternatives --set php /usr/bin/php{$this->version}");
+            $this->files->unlink(VALET_HOME_PATH . '/use_php_version');
         }
 
         if ($exception) {
             info('Changing version failed');
-
             throw $exception;
         }
     }
@@ -135,15 +121,33 @@ class PhpFpm
      */
     public function installConfiguration()
     {
-        $contents = $this->files->get(__DIR__.'/../stubs/fpm.conf');
+        $contents = $this->files->get(__DIR__ . '/../stubs/fpm.conf');
 
         $this->files->putAsUser(
-            $this->fpmConfigPath().'/valet.conf',
+            $this->fpmConfigPath() . '/valet.conf',
             str_array_replace([
-                'VALET_USER'      => user(),
-                'VALET_GROUP'     => group(),
+                'VALET_USER' => user(),
+                'VALET_GROUP' => group(),
                 'VALET_HOME_PATH' => VALET_HOME_PATH,
             ], $contents)
+        );
+
+        if (($this->sm) instanceof \Valet\ServiceManagers\Systemd) {
+            $this->systemdDropInOverride();
+        }
+    }
+
+    /**
+     * Install Drop-In systemd override for php-fpm service
+     *
+     * @return void
+     */
+    public function systemdDropInOverride()
+    {
+        $this->files->ensureDirExists('/etc/systemd/system/php-fpm.service.d');
+        $this->files->putAsUser(
+            '/etc/systemd/system/php-fpm.service.d/valet.conf',
+            $this->files->get(__DIR__ . '/../stubs/php-fpm.service.d/valet.conf')
         );
     }
 
@@ -186,8 +190,8 @@ class PhpFpm
      */
     public function getVersion($real = false)
     {
-        if (!$real && $this->files->exists(VALET_HOME_PATH.'/use_php_version')) {
-            $version = $this->files->get(VALET_HOME_PATH.'/use_php_version');
+        if (!$real && $this->files->exists(VALET_HOME_PATH . '/use_php_version')) {
+            $version = $this->files->get(VALET_HOME_PATH . '/use_php_version');
         } else {
             $version = explode('php', basename($this->files->readLink('/usr/bin/php')))[1];
         }
@@ -196,17 +200,25 @@ class PhpFpm
     }
 
     /**
-     * Determine php service name.
+     * Determine php service name
      *
      * @return string
      */
-    public function fpmServiceName()
+    public function fpmServiceName($serviceName = null)
     {
-        $service = 'php'.$this->version.'-fpm';
+        if($serviceName === null){
+            $service = "php{$this->version}-fpm";
+        }else{
+            $service = $serviceName;
+        }
         $status = $this->sm->status($service);
-
         if (strpos($status, 'not-found') || strpos($status, 'not be found')) {
-            return new DomainException('Unable to determine PHP service name.');
+                $secondTry = $this->fpmServiceName("php-fpm{$this->version}");
+                if($secondTry instanceof DomainException){
+                    return new DomainException("Unable to determine PHP service name.");
+                }
+
+                return $secondTry;
         }
 
         return $service;
@@ -220,8 +232,9 @@ class PhpFpm
     public function fpmConfigPath()
     {
         return collect([
-            '/etc/php/'.$this->version.'/fpm/pool.d', // Ubuntu
-            '/etc/php'.$this->version.'/fpm/pool.d', // Ubuntu
+            '/etc/php/' . $this->version . '/fpm/pool.d', // Ubuntu
+            '/etc/php' . $this->version . '/fpm/pool.d', // Ubuntu
+            '/etc/php' . $this->version . '/php-fpm.d', // Manjaro
             '/etc/php-fpm.d', // Fedora
             '/etc/php/php-fpm.d', // Arch
             '/etc/php7/fpm/php-fpm.d', // openSUSE

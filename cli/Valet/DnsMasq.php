@@ -19,10 +19,10 @@ class DnsMasq
     /**
      * Create a new DnsMasq instance.
      *
-     * @param PackageManager $pm    PackageManager object
-     * @param ServiceManager $sm    ServiceManager object
+     * @param PackageManager $pm PackageManager object
+     * @param ServiceManager $sm ServiceManager object
      * @param Filesystem     $files Filesystem     object
-     * @param CommandLine    $cli   CommandLine    object
+     * @param CommandLine    $cli CommandLine    object
      *
      * @return void
      */
@@ -63,19 +63,19 @@ class DnsMasq
     }
 
     /**
-     * Enable nameserver merging.
+     * Enable nameserver merging
      *
      * @return void
      */
     private function _mergeDns()
     {
         $optDir = '/opt/valet-linux';
-        $script = $optDir.'/valet-dns';
+        $script = $optDir . '/valet-dns';
 
         $this->pm->ensureInstalled('inotify-tools');
         $this->files->remove($optDir);
         $this->files->ensureDirExists($optDir);
-        $this->files->put($script, $this->files->get(__DIR__.'/../stubs/valet-dns'));
+        $this->files->put($script, $this->files->get(__DIR__ . '/../stubs/valet-dns'));
         $this->cli->run("chmod +x $script");
         $this->sm->installValetDns($this->files);
 
@@ -108,22 +108,6 @@ class DnsMasq
     }
 
     /**
-     * Stop the DnsMasq service.
-     */
-    public function stop()
-    {
-        $this->sm->stop('dnsmasq');
-    }
-
-    /**
-     * Restart the DnsMasq service.
-     */
-    public function restart()
-    {
-        $this->sm->restart('dnsmasq');
-    }
-
-    /**
      * Append the custom DnsMasq configuration file to the main configuration file.
      *
      * @param string $domain Domain TLD to use
@@ -132,7 +116,7 @@ class DnsMasq
      */
     public function createCustomConfigFile($domain)
     {
-        $this->files->putAsUser($this->configPath, 'address=/.'.$domain.'/127.0.0.1'.PHP_EOL);
+        $this->files->putAsUser($this->configPath, 'address=/.' . $domain . '/127.0.0.1' . PHP_EOL);
     }
 
     /**
@@ -172,9 +156,9 @@ class DnsMasq
         $this->files->unlink('/etc/dnsmasq.d/network-manager');
         $this->files->backup($this->dnsmasqconf);
 
-        $this->files->putAsUser($this->dnsmasqconf, $this->files->get(__DIR__.'/../stubs/dnsmasq.conf'));
-        $this->files->putAsUser($this->dnsmasqOpts, $this->files->get(__DIR__.'/../stubs/dnsmasq_options'));
-        $this->files->putAsUser($this->nmConfigPath, $this->files->get(__DIR__.'/../stubs/networkmanager.conf'));
+        $this->files->putAsUser($this->dnsmasqconf, $this->files->get(__DIR__ . '/../stubs/dnsmasq.conf'));
+        $this->files->putAsUser($this->dnsmasqOpts, $this->files->get(__DIR__ . '/../stubs/dnsmasq_options'));
+        $this->files->putAsUser($this->nmConfigPath, $this->files->get(__DIR__ . '/../stubs/networkmanager.conf'));
     }
 
     /**

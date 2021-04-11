@@ -19,7 +19,6 @@ class Filesystem
      * Delete the specified file or directory with files.
      *
      * @param string $files
-     *
      * @return void
      */
     public function remove($files)
@@ -56,7 +55,6 @@ class Filesystem
      * Determine if the given path is a directory.
      *
      * @param string $path
-     *
      * @return bool
      */
     public function isDir($path)
@@ -70,12 +68,13 @@ class Filesystem
      * @param string      $path
      * @param string|null $owner
      * @param int         $mode
-     *
      * @return void
      */
     public function mkdir($path, $owner = null, $mode = 0755)
     {
-        mkdir($path, $mode, true);
+        if (!mkdir($path, $mode, true) && !is_dir($path)) {
+            throw new \RuntimeException(sprintf('Directory "%s" was not created', $path));
+        }
 
         if ($owner) {
             $this->chown($path, $owner);
@@ -88,7 +87,6 @@ class Filesystem
      * @param string      $path
      * @param string|null $owner
      * @param int         $mode
-     *
      * @return void
      */
     public function ensureDirExists($path, $owner = null, $mode = 0755)
@@ -103,7 +101,6 @@ class Filesystem
      *
      * @param string $path
      * @param int    $mode
-     *
      * @return void
      */
     public function mkdirAsUser($path, $mode = 0755)
@@ -116,7 +113,6 @@ class Filesystem
      *
      * @param string      $path
      * @param string|null $owner
-     *
      * @return string
      */
     public function touch($path, $owner = null)
@@ -134,7 +130,6 @@ class Filesystem
      * Touch the given path as the non-root user.
      *
      * @param string $path
-     *
      * @return void
      */
     public function touchAsUser($path)
@@ -146,7 +141,6 @@ class Filesystem
      * Determine if the given file exists.
      *
      * @param string $path
-     *
      * @return bool
      */
     public function exists($files)
@@ -164,7 +158,6 @@ class Filesystem
      * Read the contents of the given file.
      *
      * @param string $path
-     *
      * @return string
      */
     public function get($path)
@@ -178,7 +171,6 @@ class Filesystem
      * @param string      $path
      * @param string      $contents
      * @param string|null $owner
-     *
      * @return string
      */
     public function put($path, $contents, $owner = null)
@@ -197,7 +189,6 @@ class Filesystem
      *
      * @param string $path
      * @param string $contents
-     *
      * @return string
      */
     public function putAsUser($path, $contents)
@@ -211,7 +202,6 @@ class Filesystem
      * @param string      $path
      * @param string      $contents
      * @param string|null $owner
-     *
      * @return void
      */
     public function append($path, $contents, $owner = null)
@@ -228,7 +218,6 @@ class Filesystem
      *
      * @param string $path
      * @param string $contents
-     *
      * @return void
      */
     public function appendAsUser($path, $contents)
@@ -241,7 +230,6 @@ class Filesystem
      *
      * @param string $from
      * @param string $to
-     *
      * @return void
      */
     public function copy($from, $to)
@@ -253,12 +241,11 @@ class Filesystem
      * Backup the given file.
      *
      * @param string $file
-     *
      * @return bool
      */
     public function backup($file)
     {
-        $to = $file.'.bak';
+        $to = $file . '.bak';
 
         if (!$this->exists($to)) {
             if ($this->exists($file)) {
@@ -273,12 +260,11 @@ class Filesystem
      * Restore a backed up file.
      *
      * @param string $file
-     *
      * @return bool
      */
     public function restore($file)
     {
-        $from = $file.'.bak';
+        $from = $file . '.bak';
 
         if ($this->exists($from)) {
             return rename($from, $file);
@@ -292,7 +278,6 @@ class Filesystem
      *
      * @param string $from
      * @param string $to
-     *
      * @return void
      */
     public function copyAsUser($from, $to)
@@ -307,7 +292,6 @@ class Filesystem
      *
      * @param string $target
      * @param string $link
-     *
      * @return void
      */
     public function symlink($target, $link)
@@ -326,7 +310,6 @@ class Filesystem
      *
      * @param string $target
      * @param string $link
-     *
      * @return void
      */
     public function symlinkAsUser($target, $link)
@@ -335,7 +318,7 @@ class Filesystem
             $this->unlink($link);
         }
 
-        CommandLineFacade::runAsUser('ln -s '.escapeshellarg($target).' '.escapeshellarg($link));
+        CommandLineFacade::runAsUser('ln -s ' . escapeshellarg($target) . ' ' . escapeshellarg($link));
     }
 
     /**
@@ -343,7 +326,6 @@ class Filesystem
      *
      * @param string $line
      * @param string $file
-     *
      * @return void
      */
     public function commentLine($line, $file)
@@ -359,7 +341,6 @@ class Filesystem
      *
      * @param string $line
      * @param string $file
-     *
      * @return void
      */
     public function uncommentLine($line, $file)
@@ -374,7 +355,6 @@ class Filesystem
      * Delete the file at the given path.
      *
      * @param string $path
-     *
      * @return void
      */
     public function unlink($path)
@@ -410,7 +390,6 @@ class Filesystem
      * Resolve the given path.
      *
      * @param string $path
-     *
      * @return string
      */
     public function realpath($path)
@@ -422,7 +401,6 @@ class Filesystem
      * Determine if the given path is a symbolic link.
      *
      * @param string $path
-     *
      * @return bool
      */
     public function isLink($path)
@@ -434,7 +412,6 @@ class Filesystem
      * Resolve the given symbolic link.
      *
      * @param string $path
-     *
      * @return string
      */
     public function readLink($path)
@@ -452,25 +429,23 @@ class Filesystem
      * Remove all of the broken symbolic links at the given path.
      *
      * @param string $path
-     *
      * @return void
      */
     public function removeBrokenLinksAt($path)
     {
         collect($this->scandir($path))
-                ->filter(function ($file) use ($path) {
-                    return $this->isBrokenLink($path.'/'.$file);
-                })
-                ->each(function ($file) use ($path) {
-                    $this->unlink($path.'/'.$file);
-                });
+            ->filter(function ($file) use ($path) {
+                return $this->isBrokenLink($path . '/' . $file);
+            })
+            ->each(function ($file) use ($path) {
+                $this->unlink($path . '/' . $file);
+            });
     }
 
     /**
      * Determine if the given path is a broken symbolic link.
      *
      * @param string $path
-     *
      * @return bool
      */
     public function isBrokenLink($path)
@@ -482,7 +457,6 @@ class Filesystem
      * Scan the given directory path.
      *
      * @param string $path
-     *
      * @return array
      */
     public function scandir($path)

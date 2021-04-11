@@ -25,7 +25,7 @@ class Ngrok
             if (isset($body->tunnels) && count($body->tunnels) > 0) {
                 return $this->findHttpTunnelUrl($body->tunnels);
             } else {
-                throw new DomainException('Tunnel not established.');
+                throw new DomainException("Tunnel not established.");
             }
         }, 250);
     }
@@ -34,7 +34,6 @@ class Ngrok
      * Find the HTTP tunnel URL from the list of tunnels.
      *
      * @param array $tunnels
-     *
      * @return string|null
      */
     public function findHttpTunnelUrl(array $tunnels)

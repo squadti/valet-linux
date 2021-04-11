@@ -7,34 +7,30 @@ use Symfony\Component\Console\Output\ConsoleOutput;
 /**
  * Define the ~/.valet path as a constant.
  */
-define('VALET_HOME_PATH', $_SERVER['HOME'].'/.valet');
-define('VALET_ROOT_PATH', realpath(__DIR__.'/../../'));
-define('VALET_BIN_PATH', realpath(__DIR__.'/../../bin/'));
-define('VALET_SERVER_PATH', realpath(__DIR__.'/../../server.php'));
+define('VALET_HOME_PATH', $_SERVER['HOME'] . '/.valet');
+define('VALET_SERVER_PATH', realpath(__DIR__ . '/../../server.php'));
 define('VALET_STATIC_PREFIX', '41c270e4-5535-4daa-b23e-c269744c2f45');
 
 /**
  * Output the given text to the console.
  *
  * @param string $output
- *
  * @return void
  */
 function info($output)
 {
-    output('<info>'.$output.'</info>');
+    output('<info>' . $output . '</info>');
 }
 
 /**
  * Output the given text to the console.
  *
  * @param string $output
- *
  * @return void
  */
 function warning($output)
 {
-    output('<fg=red>'.$output.'</>');
+    output('<fg=red>' . $output . '</>');
 }
 
 /**
@@ -42,12 +38,11 @@ function warning($output)
  *
  * @param array $headers
  * @param array $rows
- *
  * @return void
  */
 function table(array $headers = [], array $rows = [])
 {
-    $table = new Table(new ConsoleOutput());
+    $table = new Table(new ConsoleOutput);
 
     $table->setHeaders($headers)->setRows($rows);
 
@@ -58,7 +53,6 @@ function table(array $headers = [], array $rows = [])
  * Output the given text to the console.
  *
  * @param string $output
- *
  * @return void
  */
 function output($output)
@@ -67,7 +61,7 @@ function output($output)
         return;
     }
 
-    (new ConsoleOutput())->writeln($output);
+    (new ConsoleOutput)->writeln($output);
 }
 
 if (!function_exists('resolve')) {
@@ -75,7 +69,6 @@ if (!function_exists('resolve')) {
      * Resolve the given class from the container.
      *
      * @param string $class
-     *
      * @return mixed
      */
     function resolve($class)
@@ -89,7 +82,6 @@ if (!function_exists('resolve')) {
  *
  * @param string $class
  * @param mixed  $instance
- *
  * @return void
  */
 function swap($class, $instance)
@@ -102,11 +94,8 @@ if (!function_exists('retry')) {
      * Retry the given function N times.
      *
      * @param int      $retries
-     * @param callable $fn
+     * @param callable $retries
      * @param int      $sleep
-     *
-     * @throws Exception
-     *
      * @return mixed
      */
     function retry($retries, $fn, $sleep = 0)
@@ -133,8 +122,6 @@ if (!function_exists('retry')) {
 /**
  * Verify that the script is currently running as "sudo".
  *
- * @throws Exception
- *
  * @return void
  */
 function should_be_sudo()
@@ -150,7 +137,6 @@ if (!function_exists('tap')) {
      *
      * @param mixed    $value
      * @param callable $callback
-     *
      * @return mixed
      */
     function tap($value, callable $callback)
@@ -167,13 +153,12 @@ if (!function_exists('ends_with')) {
      *
      * @param string       $haystack
      * @param string|array $needles
-     *
      * @return bool
      */
     function ends_with($haystack, $needles)
     {
-        foreach ((array) $needles as $needle) {
-            if (substr($haystack, -strlen($needle)) === (string) $needle) {
+        foreach ((array)$needles as $needle) {
+            if (substr($haystack, -strlen($needle)) === (string)$needle) {
                 return true;
             }
         }
@@ -183,7 +168,7 @@ if (!function_exists('ends_with')) {
 }
 
 /**
- * Get the user.
+ * Get the user
  */
 function user()
 {
@@ -195,54 +180,25 @@ function user()
 }
 
 /**
- * Get the user's group.
+ * Get the user's group
  */
 function group()
 {
     if (!isset($_SERVER['SUDO_USER'])) {
-        return exec('id -gn '.$_SERVER['USER']);
+        return exec('id -gn ' . $_SERVER['USER']);
     }
 
-    return exec('id -gn '.$_SERVER['SUDO_USER']);
+    return exec('id -gn ' . $_SERVER['SUDO_USER']);
 }
 
 /**
- * Search and replace using associative array.
+ * Search and replace using associative array
  *
  * @param array  $searchAndReplace
  * @param string $subject
- *
  * @return string
  */
 function str_array_replace($searchAndReplace, $subject)
 {
     return str_replace(array_keys($searchAndReplace), array_values($searchAndReplace), $subject);
-}
-
-/**
- * Get user input from cli.
- *
- * @param $question
- * @param $suggestion
- * @param $default
- *
- * @return string
- */
-function ask($question, $suggestion = null, $default = null)
-{
-    return CliPrompt::prompt($question, false, $suggestion, $default);
-}
-
-/**
- * Get user hidden input from cli.
- *
- * @param $question
- * @param $suggestion
- * @param $default
- *
- * @return string
- */
-function ask_secret($question, $suggestion = null, $default = null)
-{
-    return CliPrompt::prompt($question, true, $suggestion, $default);
 }

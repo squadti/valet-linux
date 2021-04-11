@@ -8,12 +8,11 @@ class JoomlaValetDriver extends BasicValetDriver
      * @param string $sitePath
      * @param string $siteName
      * @param string $uri
-     *
      * @return bool
      */
     public function serves($sitePath, $siteName, $uri)
     {
-        return is_dir($sitePath.'/libraries/joomla');
+        return is_dir($sitePath . '/libraries/joomla');
     }
 
     /**
@@ -22,7 +21,6 @@ class JoomlaValetDriver extends BasicValetDriver
      * @param string $sitePath
      * @param string $siteName
      * @param string $uri
-     *
      * @return string
      */
     public function frontControllerPath($sitePath, $siteName, $uri)

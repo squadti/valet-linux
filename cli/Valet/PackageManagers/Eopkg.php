@@ -14,7 +14,6 @@ class Eopkg implements PackageManager
      * Create a new Eopkg instance.
      *
      * @param CommandLine $cli
-     *
      * @return void
      */
     public function __construct(CommandLine $cli)
@@ -23,15 +22,14 @@ class Eopkg implements PackageManager
     }
 
     /**
-     * Get array of installed packages.
+     * Get array of installed packages
      *
      * @param string $package
-     *
      * @return array
      */
     public function packages($package)
     {
-        $query = "dpkg -l {$package} | grep '^ii' | sed 's/\s\+/ /g' | cut -d' ' -f2";
+        $query = "eopkg li | cut -d ' ' -f 1";
 
         return explode(PHP_EOL, $this->cli->run($query));
     }
@@ -40,7 +38,6 @@ class Eopkg implements PackageManager
      * Determine if the given package is installed.
      *
      * @param string $package
-     *
      * @return bool
      */
     public function installed($package)
@@ -52,7 +49,6 @@ class Eopkg implements PackageManager
      * Ensure that the given package is installed.
      *
      * @param string $package
-     *
      * @return void
      */
     public function ensureInstalled($package)
@@ -66,17 +62,16 @@ class Eopkg implements PackageManager
      * Install the given package and throw an exception on failure.
      *
      * @param string $package
-     *
      * @return void
      */
     public function installOrFail($package)
     {
-        output('<info>['.$package.'] is not installed, installing it now via Eopkg...</info> 🍻');
+        output('<info>[' . $package . '] is not installed, installing it now via Eopkg...</info> 🍻');
 
-        $this->cli->run(trim('eopkg install -y '.$package), function ($exitCode, $errorOutput) use ($package) {
+        $this->cli->run(trim('eopkg install -y ' . $package), function ($exitCode, $errorOutput) use ($package) {
             output($errorOutput);
 
-            throw new DomainException('Eopkg was unable to install ['.$package.'].');
+            throw new DomainException('Eopkg was unable to install [' . $package . '].');
         });
     }
 

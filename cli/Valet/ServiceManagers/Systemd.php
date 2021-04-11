@@ -33,7 +33,7 @@ class Systemd implements ServiceManager
 
         foreach ($services as $service) {
             info("Starting $service...");
-            $this->cli->quietly('sudo systemctl start '.$this->getRealService($service));
+            $this->cli->quietly('sudo systemctl start ' . $this->getRealService($service));
         }
     }
 
@@ -50,7 +50,7 @@ class Systemd implements ServiceManager
 
         foreach ($services as $service) {
             info("Stopping $service...");
-            $this->cli->quietly('sudo systemctl stop '.$this->getRealService($service));
+            $this->cli->quietly('sudo systemctl stop ' . $this->getRealService($service));
         }
     }
 
@@ -67,7 +67,7 @@ class Systemd implements ServiceManager
 
         foreach ($services as $service) {
             info("Restarting $service...");
-            $this->cli->quietly('sudo systemctl restart '.$this->getRealService($service));
+            $this->cli->quietly('sudo systemctl restart ' . $this->getRealService($service));
         }
     }
 
@@ -83,13 +83,13 @@ class Systemd implements ServiceManager
         $services = is_array($services) ? $services : func_get_args();
 
         foreach ($services as $service) {
-            $status = $this->cli->run('systemctl status '.$this->getRealService($service).' | grep "Active:"');
+            $status = $this->cli->run('systemctl status ' . $this->getRealService($service) . ' | grep "Active:"');
             $running = strpos(trim($status), 'running');
 
             if ($running) {
-                info(ucfirst($service).' is running...');
+                info(ucfirst($service) . ' is running...');
             } else {
-                warning(ucfirst($service).' is stopped...');
+                warning(ucfirst($service) . ' is stopped...');
             }
         }
     }
@@ -103,7 +103,7 @@ class Systemd implements ServiceManager
      */
     public function status($service)
     {
-        return $this->cli->run('systemctl status '.$this->getRealService($service));
+        return $this->cli->run('systemctl status ' . $this->getRealService($service));
     }
 
     /**
@@ -136,17 +136,17 @@ class Systemd implements ServiceManager
                 $service = $this->getRealService($service);
 
                 if ($this->disabled($service)) {
-                    $this->cli->quietly('sudo systemctl enable '.$service);
-                    info(ucfirst($service).' has been enabled');
+                    $this->cli->quietly('sudo systemctl enable ' . $service);
+                    info(ucfirst($service) . ' has been enabled');
 
                     return true;
                 }
 
-                info(ucfirst($service).' was already enabled');
+                info(ucfirst($service) . ' was already enabled');
 
                 return true;
             } catch (DomainException $e) {
-                warning(ucfirst($service).' unavailable.');
+                warning(ucfirst($service) . ' unavailable.');
 
                 return false;
             }
@@ -169,17 +169,17 @@ class Systemd implements ServiceManager
                 $service = $this->getRealService($service);
 
                 if (!$this->disabled($service)) {
-                    $this->cli->quietly('sudo systemctl disable '.$service);
-                    info(ucfirst($service).' has been disabled');
+                    $this->cli->quietly('sudo systemctl disable ' . $service);
+                    info(ucfirst($service) . ' has been disabled');
 
                     return true;
                 }
 
-                info(ucfirst($service).' was already disabled');
+                info(ucfirst($service) . ' was already disabled');
 
                 return true;
             } catch (DomainException $e) {
-                warning(ucfirst($service).' unavailable.');
+                warning(ucfirst($service) . ' unavailable.');
 
                 return false;
             }
@@ -208,7 +208,7 @@ class Systemd implements ServiceManager
     }
 
     /**
-     * Determine real service name.
+     * Determine real service name
      *
      * @param mixed $service Service name
      *
@@ -218,10 +218,10 @@ class Systemd implements ServiceManager
     {
         return collect($service)->first(
             function ($service) {
-                return strpos($this->cli->run("systemctl status {$service} | grep Loaded"), 'Loaded: loaded');
+                return strpos($this->cli->run("systemctl status {$service} | grep Loaded"), 'Loaded: loaded') >= 0;
             },
             function () {
-                throw new DomainException('Unable to determine service name.');
+                throw new DomainException("Unable to determine service name.");
             }
         );
     }
@@ -235,34 +235,13 @@ class Systemd implements ServiceManager
      */
     public function installValetDns($files)
     {
-        info('Installing Valet DNS service...');
+        info("Installing Valet DNS service...");
 
         $files->put(
             '/etc/systemd/system/valet-dns.service',
-            $files->get(__DIR__.'/../../stubs/init/systemd')
+            $files->get(__DIR__ . '/../../stubs/init/systemd')
         );
 
         $this->enable('valet-dns');
-    }
-
-    /**
-     * Determine if service manager is systemctl.
-     *
-     * @return bool
-     */
-    public function _hasSystemd()
-    {
-        try {
-            $this->cli->run(
-                'which systemctl',
-                function ($exitCode, $output) {
-                    throw new DomainException('Systemd not available');
-                }
-            );
-
-            return true;
-        } catch (DomainException $e) {
-            return false;
-        }
     }
 }

@@ -14,7 +14,6 @@ class Yum implements PackageManager
      * Create a new Yum instance.
      *
      * @param CommandLine $cli
-     *
      * @return void
      */
     public function __construct(CommandLine $cli)
@@ -26,7 +25,6 @@ class Yum implements PackageManager
      * Determine if the given package is installed.
      *
      * @param string $package
-     *
      * @return bool
      */
     public function installed($package)
@@ -42,7 +40,6 @@ class Yum implements PackageManager
      * Ensure that the given package is installed.
      *
      * @param string $package
-     *
      * @return void
      */
     public function ensureInstalled($package)
@@ -56,17 +53,16 @@ class Yum implements PackageManager
      * Install the given package and throw an exception on failure.
      *
      * @param string $package
-     *
      * @return void
      */
     public function installOrFail($package)
     {
-        output('<info>['.$package.'] is not installed, installing it now via Yum...</info> 🍻');
+        output('<info>[' . $package . '] is not installed, installing it now via Yum...</info> 🍻');
 
-        $this->cli->run(trim('yum install -y '.$package), function ($exitCode, $errorOutput) use ($package) {
+        $this->cli->run(trim('yum install -y ' . $package), function ($exitCode, $errorOutput) use ($package) {
             output($errorOutput);
 
-            throw new DomainException('Yum was unable to install ['.$package.'].');
+            throw new DomainException('Yum was unable to install [' . $package . '].');
         });
     }
 
